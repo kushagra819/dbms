@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS — PYQ Bank</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0f0a;
+  --surface: #111410;
+  --card: #181c14;
+  --border: #242820;
+  --accent: #7ec845;
+  --accent2: #4db8a0;
+  --accent3: #e07050;
+  --accent4: #d4a842;
+  --text: #e6ead8;
+  --muted: #7a8068;
+  --tag-bg: #1c2016;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Lora', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: linear-gradient(135deg, #0c0f0a 0%, #121508 60%, #0f120c 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 32px 36px;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(126,200,69,0.07) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 60% at 20% 80%, rgba(77,184,160,0.05) 0%, transparent 60%);
+}
+.header-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+.header-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(26px, 5vw, 50px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #fff;
+}
+header h1 span { color: var(--accent); }
+.header-sub {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stats-row {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  margin-top: 24px;
+}
+.stat {
+  background: var(--tag-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.stat strong { color: var(--accent); font-size: 15px; display: block; margin-bottom: 2px; }
+
+/* ── SEARCH ── */
+.search-wrap {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 0 16px;
+}
+#searchInput {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#searchInput::placeholder { color: var(--muted); }
+#searchInput:focus { border-color: var(--accent); }
+#no-results {
+  display: none;
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── SIDEBAR ── */
+#sidenav {
+  position: sticky;
+  top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 0;
+  overflow: hidden;
+}
+.nav-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+#sidenav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  text-decoration: none;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  transition: all 0.18s;
+  border-left: 3px solid transparent;
+}
+#sidenav a:hover { color: var(--text); background: var(--card); }
+#sidenav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--tag-bg); }
+.nav-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #111410f5;
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mobile-nav::-webkit-scrollbar { display: none; }
+.mobile-nav-inner {
+  display: flex;
+  padding: 6px 8px 10px;
+  gap: 4px;
+  min-width: max-content;
+}
+.mobile-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all 0.18s;
+  border: 1px solid transparent;
+}
+.mobile-nav a.active {
+  color: var(--text);
+  background: var(--card);
+  border-color: var(--border);
+}
+.mobile-nav .mnav-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+
+/* ── MODULES ── */
+.module {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--card) 0%, var(--surface) 100%);
+}
+.module-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.module-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+.module-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── TOPICS ── */
+.topic { border-bottom: 1px solid var(--border); }
+.topic:last-child { border-bottom: none; }
+.topic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.topic-header:hover { background: var(--card); }
+.topic-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.topic-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--tag-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+.topic-arrow {
+  color: var(--muted);
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.topic.open .topic-arrow { transform: rotate(90deg); }
+.topic-body {
+  display: none;
+  padding: 8px 16px 16px;
+  gap: 10px;
+}
+.topic.open .topic-body { display: flex; flex-direction: column; }
+
+/* ── Q CARDS ── */
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.q-card:hover { border-color: #3a4030; }
+.q-card.hidden { display: none; }
+.q-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.q-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  border-radius: 5px;
+  padding: 2px 7px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+.q-tag.paper {
+  background: #1e2a1a;
+  color: #6db840;
+  border: 1px solid #2a3a22;
+}
+.q-text { font-size: 14px; color: var(--text); line-height: 1.65; }
+.q-text strong { color: var(--accent4); }
+.sub-q {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: var(--tag-bg);
+  border-left: 3px solid var(--border);
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.sub-q li { margin-left: 16px; margin-bottom: 3px; }
+
+/* ── FREQUENCY BADGES ── */
+.freq-indicator {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.freq-high {
+  background: rgba(212,168,66,0.15);
+  color: var(--accent4);
+  border: 1px solid rgba(212,168,66,0.3);
+}
+.freq-med {
+  background: rgba(77,184,160,0.12);
+  color: var(--accent2);
+  border: 1px solid rgba(77,184,160,0.25);
+}
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 28px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  #sidenav { display: none; }
+  .layout { grid-template-columns: 1fr; padding-bottom: 80px; }
+  .mobile-nav { display: block; }
+  .topic-badge { display: none; }
+  .freq-indicator { position: static; margin-bottom: 8px; }
+  header { padding: 32px 18px 24px; }
+  .stats-row { gap: 10px; }
+  .stat { padding: 6px 12px; }
+  .module-header { padding: 16px 18px; }
+  .topic-header { padding: 12px 18px; }
+  .q-card { padding: 12px 14px; }
+}
+@media (max-width: 480px) {
+  header h1 { font-size: 22px; }
+  .module-title { font-size: 14px; }
+  .topic-name { font-size: 13px; }
+  .q-text { font-size: 13px; }
+  #searchInput { font-size: 16px; } /* prevent iOS zoom */
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-inner">
+    <a href="#m1"><div class="mnav-dot" style="background:#7ec845"></div>Intro &amp; Data Modeling</a>
+    <a href="#m2"><div class="mnav-dot" style="background:#4db8a0"></div>Relational Model</a>
+    <a href="#m3"><div class="mnav-dot" style="background:#5b8dee"></div>SQL</a>
+    <a href="#m4"><div class="mnav-dot" style="background:#d4a842"></div>Normalization</a>
+    <a href="#m5"><div class="mnav-dot" style="background:#e07050"></div>Transactions</a>
+    <a href="#m6"><div class="mnav-dot" style="background:#c060c0"></div>Modern DB</a>
+  </div>
+</nav>
+
+<header>
+  <div class="header-inner">
+    <div class="header-label">PYQ Bank · Dec 2022 – Dec 2024</div>
+    <h1>Database Management<br><span>Systems</span></h1>
+    <div class="header-sub">5 exam papers · 6 modules · all questions included</div>
+    <div class="stats-row">
+      <div class="stat"><strong>5</strong>Papers</div>
+      <div class="stat"><strong>6</strong>Modules</div>
+      <div class="stat"><strong>★</strong>Repeated Flagged</div>
+      <div class="stat"><strong>⌕</strong>Live Search</div>
+    </div>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <input type="search" id="searchInput" placeholder="Search any topic, keyword, or question…" autocomplete="off">
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav id="sidenav">
+    <div class="nav-title">Modules</div>
+    <a href="#m1"><div class="nav-dot" style="background:#7ec845"></div>Introduction &amp; Data Modeling</a>
+    <a href="#m2"><div class="nav-dot" style="background:#4db8a0"></div>Relational Model &amp; Algebra</a>
+    <a href="#m3"><div class="nav-dot" style="background:#5b8dee"></div>SQL</a>
+    <a href="#m4"><div class="nav-dot" style="background:#d4a842"></div>Normalization</a>
+    <a href="#m5"><div class="nav-dot" style="background:#e07050"></div>Transactions &amp; Concurrency</a>
+    <a href="#m6"><div class="nav-dot" style="background:#c060c0"></div>Modern Databases</div></a>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+<!-- ══════════════════════════════════════════
+     MODULE 1 — INTRODUCTION & DATA MODELING
+══════════════════════════════════════════ -->
+<div class="module" id="m1">
+  <div class="module-header">
+    <div class="module-dot" style="background:#7ec845"></div>
+    <div class="module-title">Introduction &amp; Data Modeling</div>
+    <div class="module-count">Module 1</div>
+  </div>
+
+  <!-- TOPIC: DBMS vs File System -->
+  <div class="topic open" id="t-dbms-fs">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">DBMS vs File Processing System</span>
+      <span class="topic-badge">Comparison</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2024 Q1a</span>
+          <span class="q-tag paper">Dec 2024 Q1a</span>
+        </div>
+        <div class="q-text">Compare File Processing System with Database Management System. / Differentiate between DBMS and File System.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Data Independence & Architecture -->
+  <div class="topic open" id="t-arch">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">DBMS Architecture &amp; Data Independence</span>
+      <span class="topic-badge">Architecture</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q1a</span>
+          <span class="q-tag paper">Dec 2023 Q1a</span>
+          <span class="q-tag paper">May 2023 Q2a</span>
+        </div>
+        <div class="q-text">What is data abstraction and data independence? Explain the concept of data independence. Discuss the differences between <strong>logical and physical data independence</strong>.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q2a</span>
+          <span class="q-tag paper">May 2024 Q3a</span>
+          <span class="q-tag paper">Dec 2024 Q2a</span>
+        </div>
+        <div class="q-text">Describe the <strong>overall architecture of DBMS</strong> with a suitable diagram. (Three-schema / three-layer architecture.)</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q2a</span>
+        </div>
+        <div class="q-text">Discuss the <strong>three-layer schema architecture</strong> with a suitable diagram. What is Data Independence? Explain types of data independence.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Types of Users -->
+  <div class="topic open" id="t-users">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Types of Users in DBMS</span>
+      <span class="topic-badge">Theory</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q6c</span>
+          <span class="q-tag paper">May 2023 Q1a</span>
+        </div>
+        <div class="q-text">Identify / Write notes on the different <strong>types of users</strong> of a database management system.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: ER Diagrams -->
+  <div class="topic open" id="t-er">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">ER &amp; EER Diagrams</span>
+      <span class="topic-badge">Modeling</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q1b</span>
+          <span class="q-tag paper">May 2024 Q2b</span>
+          <span class="q-tag paper">Dec 2024 Q3a</span>
+        </div>
+        <div class="q-text">Draw an <strong>Extended E-R / EER diagram for a Hospital Management System</strong> and map it into a relational model. Assume suitable data.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q3a</span>
+          <span class="q-tag paper">DBMS.docx</span>
+        </div>
+        <div class="q-text">Draw an <strong>E-R diagram for a Library Management System</strong>. Convert it into a relational schema.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q3a</span>
+        </div>
+        <div class="q-text">Construct an ER diagram and convert it into a relational model for a <strong>company</strong>: Several employees work for one department, every department has a manager. Several employees are supervised by one employee. Employees have zero or more dependents.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q1b</span>
+        </div>
+        <div class="q-text">Convert the given <strong>E-R diagram (Banking System</strong>: Customer, Depositor, Account, Branch, Borrower, Loan) to a relational schema.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Entities & Attributes -->
+  <div class="topic open" id="t-entity">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Entities, Attributes &amp; Relationships</span>
+      <span class="topic-badge">Concepts</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2024 Q1b</span>
+          <span class="q-tag paper">Dec 2024 Q1d</span>
+          <span class="q-tag paper">Dec 2023 Q1b</span>
+        </div>
+        <div class="q-text">Define with an example the different <strong>types of Entities</strong> in an ER diagram. Describe a <strong>weak entity</strong>. Provide an example of a weak entity and strong entity.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q5b (notes)</span>
+          <span class="q-tag paper">May 2023 Q6b</span>
+        </div>
+        <div class="q-text">Write short notes on <strong>Types of Attributes</strong>.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q6a</span>
+          <span class="q-tag paper">Dec 2023 Q5b (notes)</span>
+        </div>
+        <div class="q-text">Explain <strong>Conversion of Specialization to relational schema</strong> with a suitable example.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 1 -->
+
+
+<!-- ══════════════════════════════════════════
+     MODULE 2 — RELATIONAL MODEL & ALGEBRA
+══════════════════════════════════════════ -->
+<div class="module" id="m2">
+  <div class="module-header">
+    <div class="module-dot" style="background:#4db8a0"></div>
+    <div class="module-title">Relational Model &amp; Algebra</div>
+    <div class="module-count">Module 2</div>
+  </div>
+
+  <!-- TOPIC: Relational Algebra Operators -->
+  <div class="topic open" id="t-ra-ops">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Relational Algebra — Core Operators</span>
+      <span class="topic-badge">Algebra</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q3a</span>
+          <span class="q-tag paper">May 2023 Q3b</span>
+          <span class="q-tag paper">Dec 2023 Q3b</span>
+          <span class="q-tag paper">Dec 2024 Q2b</span>
+        </div>
+        <div class="q-text">Explain the following <strong>Relational Algebra operations</strong> with a suitable example:
+          <div class="sub-q">
+            <li>Project (π)</li>
+            <li>Select (σ)</li>
+            <li>Union (∪)</li>
+            <li>Rename (ρ)</li>
+            <li>Set Difference / Natural Join</li>
+          </div>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2024 Q3b</span>
+          <span class="q-tag paper">DBMS.docx</span>
+        </div>
+        <div class="q-text">Explain the following relational algebra operators with example:
+          <div class="sub-q">
+            <li>Selection operator</li>
+            <li>Union operator</li>
+            <li>Rename operator</li>
+            <li>Cartesian product (×)</li>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Joins -->
+  <div class="topic open" id="t-joins">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Types of Joins</span>
+      <span class="topic-badge">SQL + Algebra</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q2a</span>
+          <span class="q-tag paper">Dec 2024 Q3b</span>
+        </div>
+        <div class="q-text">Explain <strong>types of joins</strong> in SQL / Relational Algebra with syntax and a suitable example.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Functional Dependencies -->
+  <div class="topic open" id="t-fd">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Functional Dependencies</span>
+      <span class="topic-badge">Theory</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q1d</span>
+          <span class="q-tag paper">Dec 2024 Q1c</span>
+        </div>
+        <div class="q-text">List all functional dependencies satisfied by the given relation. / Explain <strong>types of functional dependency</strong> with a suitable example.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 2 -->
+
+
+<!-- ══════════════════════════════════════════
+     MODULE 3 — SQL
+══════════════════════════════════════════ -->
+<div class="module" id="m3">
+  <div class="module-header">
+    <div class="module-dot" style="background:#5b8dee"></div>
+    <div class="module-title">SQL</div>
+    <div class="module-count">Module 3</div>
+  </div>
+
+  <!-- TOPIC: Aggregate Functions -->
+  <div class="topic open" id="t-agg">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Aggregate Functions</span>
+      <span class="topic-badge">SQL</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q1c</span>
+          <span class="q-tag paper">May 2024 Q2a</span>
+          <span class="q-tag paper">Dec 2024 Q1b</span>
+        </div>
+        <div class="q-text">List and briefly explain <strong>SQL aggregate functions</strong> (COUNT, SUM, AVG, MAX, MIN) with syntax and suitable examples.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: SQL Queries – Employee DB -->
+  <div class="topic open" id="t-sql-emp">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">SQL Queries — Employee Database</span>
+      <span class="topic-badge">Queries</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q4a</span>
+          <span class="q-tag paper">May 2024 Q5a</span>
+        </div>
+        <div class="q-text">Consider the employee database: <strong>Employee(empname, street, city, date_of_joining)</strong>, <strong>Works(empname, company_name, salary)</strong>, <strong>Company(company_name, city)</strong>, <strong>Manages(empname, manager_name)</strong>. Write SQL queries for:
+          <div class="sub-q">
+            <li>Modify the database so that 'John' now lives in 'Mumbai'.</li>
+            <li>Find all employees who joined in the month of October.</li>
+            <li>Give all employees of 'ABC Corporation' a 10% raise.</li>
+            <li>Find all employees in the database who live in the same cities as the companies for which they work.</li>
+            <li>Find all employees who earn more than the average salary of all employees of their company.</li>
+            <li>List names of companies starting with the letter "A".</li>
+          </div>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q2b</span>
+        </div>
+        <div class="q-text">Consider <strong>Employee relation (Emp_no, Emp_name, Emp_add, ph_no, email_id, salary)</strong>. Write SQL expressions for:
+          <div class="sub-q">
+            <li>List the employee whose employee number is 100.</li>
+            <li>List the Employee whose salary is between 50K to 1 Lac.</li>
+            <li>List the Employees whose name starts with 'Ami'.</li>
+            <li>Find 2nd highest salary of Employees.</li>
+            <li>Create two views on the employee table.</li>
+          </div>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2024 Q4a</span>
+        </div>
+        <div class="q-text">Consider the database: <strong>employee(eno, ename, bdate, title, salary, dno)</strong>, <strong>project(pno, pname, budget, dno)</strong>, <strong>department(dno, dname, mgreno)</strong>, <strong>works(eno, pno, resp, hours)</strong>. Write SQL queries for:
+          <div class="sub-q">
+            <li>Find the project number and name for projects with a budget &gt; 100,000.</li>
+            <li>Find the employees (name only) in department 'D1' ordered by descending salary.</li>
+            <li>Find all works records where hours worked &lt; 10 and responsibility is 'Manager'.</li>
+            <li>Find names of employees ending with letter 's'.</li>
+            <li>Find total number of employees.</li>
+            <li>Increase the salary of employees by 10%.</li>
+            <li>Find employee name with maximum salary.</li>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: SQL Queries – Book/Store DB -->
+  <div class="topic open" id="t-sql-book">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">SQL Queries — Book / Store Database</span>
+      <span class="topic-badge">Queries</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q4a</span>
+        </div>
+        <div class="q-text">Write SQL queries for the given database: <strong>Book(book_id, title, author, cost)</strong>, <strong>Store(store_no, city, state, inventory_val)</strong>, <strong>Stock(store_no, book_id, quantity)</strong>.
+          <div class="sub-q">
+            <li>Modify the cost of DBMS books by 10%.</li>
+            <li>Find the total number of books in Mumbai stores.</li>
+            <li>Find the title of all books whose title contains the word 'System'.</li>
+            <li>Find the title of the most expensive book.</li>
+            <li>Add a new record in Book.</li>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Integrity Constraints -->
+  <div class="topic open" id="t-constraints">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Integrity Constraints</span>
+      <span class="topic-badge">Constraints</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q1c</span>
+          <span class="q-tag paper">May 2024 Q6d</span>
+          <span class="q-tag paper">Dec 2024 Q4b</span>
+        </div>
+        <div class="q-text">Explain all types of <strong>integrity constraints</strong> with examples:
+          <div class="sub-q">
+            <li>Key Constraints</li>
+            <li>Domain Constraints (Null &amp; Default)</li>
+            <li>Referential Constraints</li>
+            <li>Check Constraints</li>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Triggers -->
+  <div class="topic open" id="t-triggers">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Triggers</span>
+      <span class="topic-badge">PL/SQL</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q4b</span>
+          <span class="q-tag paper">May 2023 Q6d</span>
+          <span class="q-tag paper">Dec 2023 Q5b (notes)</span>
+          <span class="q-tag paper">May 2024 Q1d</span>
+        </div>
+        <div class="q-text">What is a <strong>Trigger</strong>? Define Triggers. Write syntax and example of a trigger. Explain with syntax and example.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Views -->
+  <div class="topic open" id="t-views">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Views</span>
+      <span class="topic-badge">SQL</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q2b</span>
+        </div>
+        <div class="q-text">Create <strong>two views</strong> on the employee table. (See Employee SQL queries section for full context.)</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 3 -->
+
+
+<!-- ══════════════════════════════════════════
+     MODULE 4 — NORMALIZATION
+══════════════════════════════════════════ -->
+<div class="module" id="m4">
+  <div class="module-header">
+    <div class="module-dot" style="background:#d4a842"></div>
+    <div class="module-title">Normalization</div>
+    <div class="module-count">Module 4</div>
+  </div>
+
+  <!-- TOPIC: 1NF, 2NF, 3NF, BCNF -->
+  <div class="topic open" id="t-normal-forms">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Normal Forms — 1NF, 2NF, 3NF, BCNF</span>
+      <span class="topic-badge">Core Topic</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (5×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q5b</span>
+          <span class="q-tag paper">May 2023 Q4b</span>
+          <span class="q-tag paper">Dec 2023 Q4b</span>
+          <span class="q-tag paper">May 2024 Q4b</span>
+          <span class="q-tag paper">Dec 2024 Q5a</span>
+        </div>
+        <div class="q-text">Why is there a need for <strong>normalization</strong>? Define Normalization. Explain <strong>1NF, 2NF, 3NF, and BCNF</strong> with examples. (Most consistently repeated question across all 5 papers.)</div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q1d</span>
+          <span class="q-tag paper">May 2023 (implied)</span>
+        </div>
+        <div class="q-text">Explain the concept of <strong>First Normal Form (1NF)</strong>. Give an example for the same.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Lossless Decomposition -->
+  <div class="topic open" id="t-lossless">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Lossless Decomposition</span>
+      <span class="topic-badge">Theory</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q6e</span>
+        </div>
+        <div class="q-text">Explain <strong>lossless decomposition</strong> with a suitable example.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 4 -->
+
+
+<!-- ══════════════════════════════════════════
+     MODULE 5 — TRANSACTIONS & CONCURRENCY
+══════════════════════════════════════════ -->
+<div class="module" id="m5">
+  <div class="module-header">
+    <div class="module-dot" style="background:#e07050"></div>
+    <div class="module-title">Transactions &amp; Concurrency Control</div>
+    <div class="module-count">Module 5</div>
+  </div>
+
+  <!-- TOPIC: ACID Properties -->
+  <div class="topic open" id="t-acid">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">ACID Properties &amp; Transaction State Diagram</span>
+      <span class="topic-badge">Transactions</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q6a</span>
+          <span class="q-tag paper">May 2023 Q5a</span>
+          <span class="q-tag paper">May 2024 Q6a</span>
+          <span class="q-tag paper">DBMS.docx</span>
+        </div>
+        <div class="q-text">Describe <strong>ACID properties</strong> with examples. Explain state transition diagram of a transaction. / Explain TCL commands.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Serializability -->
+  <div class="topic open" id="t-serial">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Serializability — Conflict &amp; View</span>
+      <span class="topic-badge">Concurrency</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q5a</span>
+          <span class="q-tag paper">May 2023 Q5b</span>
+          <span class="q-tag paper">Dec 2023 Q1e</span>
+          <span class="q-tag paper">Dec 2024 Q6b</span>
+        </div>
+        <div class="q-text">Explain <strong>view and conflict serializability</strong> with a suitable example. Give an example of a serial schedule and equivalent serial schedule w.r.t. conflict serializability. Explain the concept of Serializability along with Conflict Serializability and View Serializability.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">May 2024 Q1c</span>
+        </div>
+        <div class="q-text">Draw the <strong>precedence graph</strong> for the given schedule involving T1 and T2 with Read/Write operations on A and B.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Concurrency Control – 2PL -->
+  <div class="topic open" id="t-2pl">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Lock-Based Concurrency — 2PL Protocol</span>
+      <span class="topic-badge">Concurrency</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q4a</span>
+          <span class="q-tag paper">May 2023 Q6c</span>
+          <span class="q-tag paper">Dec 2023 Q5a</span>
+          <span class="q-tag paper">DBMS.docx</span>
+        </div>
+        <div class="q-text">What is <strong>2PL</strong>? Explain its types. / Explain Lock-based (2PL) concurrency control method with example. / 2PL concurrency control protocol (short notes).</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Timestamp-Based Protocol -->
+  <div class="topic open" id="t-timestamp">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Timestamp-Based Concurrency Protocol</span>
+      <span class="topic-badge">Concurrency</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2024 Q4a</span>
+          <span class="q-tag paper">Dec 2024 Q5b</span>
+        </div>
+        <div class="q-text">Explain <strong>concurrency control</strong> and explain <strong>timestamp-based protocol</strong> of concurrency control. Write notes on timestamp-based protocols.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Deadlock -->
+  <div class="topic open" id="t-deadlock">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Deadlock — Prevention, Detection &amp; Handling</span>
+      <span class="topic-badge">Transactions</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (5×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2022 Q3b</span>
+          <span class="q-tag paper">May 2023 Q2b</span>
+          <span class="q-tag paper">Dec 2023 Q2b</span>
+          <span class="q-tag paper">May 2024 Q6b</span>
+          <span class="q-tag paper">Dec 2024 Q6a</span>
+        </div>
+        <div class="q-text">What is <strong>deadlock</strong>? Define deadlock and explain deadlock handling / prevention / detection with a suitable example.</div>
+      </div>
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (3×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">May 2023 Q2b</span>
+          <span class="q-tag paper">Dec 2023 Q2b</span>
+          <span class="q-tag paper">May 2024 Q6b</span>
+        </div>
+        <div class="q-text">Explain <strong>wait-die</strong> and <strong>wound-wait</strong> methods with a suitable example.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: Recovery -->
+  <div class="topic open" id="t-recovery">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Log-Based Recovery</span>
+      <span class="topic-badge">Recovery</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-high">★ Repeated (4×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q5b (notes)</span>
+          <span class="q-tag paper">May 2024 Q5b</span>
+          <span class="q-tag paper">Dec 2024 Q1e</span>
+          <span class="q-tag paper">Dec 2024 Q5b</span>
+        </div>
+        <div class="q-text">Write a short note on <strong>Log-based recovery mechanism</strong>. / Explain log-based recovery. / Write notes on log-based protocol.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 5 -->
+
+
+<!-- ══════════════════════════════════════════
+     MODULE 6 — MODERN DATABASES
+══════════════════════════════════════════ -->
+<div class="module" id="m6">
+  <div class="module-header">
+    <div class="module-dot" style="background:#c060c0"></div>
+    <div class="module-title">Modern Databases</div>
+    <div class="module-count">Module 6</div>
+  </div>
+
+  <!-- TOPIC: Role of DBA -->
+  <div class="topic open" id="t-dba">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">Role of DBA</span>
+      <span class="topic-badge">Administration</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="freq-indicator freq-med">↻ Repeated (2×)</div>
+        <div class="q-meta">
+          <span class="q-tag paper">Dec 2023 Q5b (notes)</span>
+          <span class="q-tag paper">May 2023 Q6 (notes)</span>
+        </div>
+        <div class="q-text">Write short notes on the <strong>Role of DBA</strong> (Database Administrator).</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOPIC: NoSQL / Cloud / Distributed (Module 6 – theory only) -->
+  <div class="topic open" id="t-nosql">
+    <div class="topic-header" onclick="toggleTopic(this)">
+      <span class="topic-name">NoSQL, Cloud &amp; Distributed Databases</span>
+      <span class="topic-badge">Theory</span>
+      <span class="topic-arrow">▶</span>
+    </div>
+    <div class="topic-body">
+
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-tag paper">Module 6 — Theory</span>
+        </div>
+        <div class="q-text"><em>No direct PYQ questions found for this topic in the 5 papers analysed.</em> However, Module 6 covers: <strong>NoSQL databases</strong> (types, CAP theorem), <strong>Distributed databases</strong> (fragmentation, replication, transparency), <strong>Cloud databases</strong>, and <strong>Object-Oriented databases</strong>. Prepare these as short notes — they are likely candidates for upcoming papers.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /MODULE 6 -->
+
+<div id="no-results">No questions matched your search. Try a different keyword.</div>
+
+  </main>
+</div><!-- /layout -->
+
+<footer>
+  DBMS PYQ Bank &nbsp;·&nbsp; Dec 2022 – Dec 2024 &nbsp;·&nbsp; All questions included
+</footer>
+
+<script>
+function toggleTopic(header) {
+  const topic = header.parentElement;
+  topic.classList.toggle('open');
+}
+
+// Search
+const searchInput = document.getElementById('searchInput');
+const noResults = document.getElementById('no-results');
+
+searchInput.addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.q-card');
+  let visible = 0;
+
+  cards.forEach(card => {
+    const text = card.innerText.toLowerCase();
+    if (!q || text.includes(q)) {
+      card.classList.remove('hidden');
+      visible++;
+      const topic = card.closest('.topic');
+      if (topic && q) topic.classList.add('open');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+
+  document.querySelectorAll('.topic').forEach(topic => {
+    const visibleCards = topic.querySelectorAll('.q-card:not(.hidden)');
+    topic.style.display = visibleCards.length === 0 && q ? 'none' : '';
+  });
+  document.querySelectorAll('.module').forEach(mod => {
+    const visibleTopics = mod.querySelectorAll('.topic:not([style*="display: none"])');
+    mod.style.display = visibleTopics.length === 0 && q ? 'none' : '';
+  });
+
+  noResults.style.display = visible === 0 && q ? 'block' : 'none';
+});
+
+// Sidebar + mobile nav active highlight
+const modules = document.querySelectorAll('.module');
+const navLinks = document.querySelectorAll('#sidenav a');
+const mobileLinks = document.querySelectorAll('#mobileNav a');
+
+function setActive(id) {
+  navLinks.forEach(a => a.classList.remove('active'));
+  mobileLinks.forEach(a => a.classList.remove('active'));
+  const sideLink = document.querySelector(`#sidenav a[href="#${id}"]`);
+  const mobLink  = document.querySelector(`#mobileNav a[href="#${id}"]`);
+  if (sideLink) sideLink.classList.add('active');
+  if (mobLink) {
+    mobLink.classList.add('active');
+    mobLink.scrollIntoView({ inline: 'nearest', behavior: 'smooth' });
+  }
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) setActive(entry.target.id);
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+modules.forEach(m => observer.observe(m));
+</script>
+
+</body>
+</html>
